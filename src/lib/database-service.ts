@@ -12,16 +12,18 @@ const isSupabaseConfigured = () => {
 // Cliente com service role para operações administrativas
 let supabaseAdmin: any = null
 
-// Inicializar cliente apenas se configurado
-if (isSupabaseConfigured()) {
-  try {
-    supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
-  } catch (error) {
-    console.error('Erro ao inicializar cliente Supabase:', error)
-    supabaseAdmin = null
+// Inicializar cliente apenas se configurado e não estiver em build time
+if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
+  if (isSupabaseConfigured()) {
+    try {
+      supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
+    } catch (error) {
+      console.error('Erro ao inicializar cliente Supabase:', error)
+      supabaseAdmin = null
+    }
+  } else {
+    console.log('⚠️ Supabase não configurado - operações de banco serão simuladas')
   }
-} else {
-  console.log('⚠️ Supabase não configurado - operações de banco serão simuladas')
 }
 
 // Helper para executar operações com fallback

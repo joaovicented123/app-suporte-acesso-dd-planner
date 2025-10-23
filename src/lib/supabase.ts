@@ -3,24 +3,26 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 
-// Criar cliente com configurações de retry e timeout
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true
-  },
-  global: {
-    headers: {
-      'x-client-info': 'ddplanner-web'
-    }
-  }
-})
-
 // Função helper para verificar se o Supabase está configurado
 export const isSupabaseConfigured = () => {
   return !!(supabaseUrl && supabaseAnonKey && supabaseUrl !== '' && supabaseAnonKey !== '')
 }
+
+// Criar cliente apenas se as variáveis estiverem configuradas
+export const supabase = isSupabaseConfigured() 
+  ? createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true
+      },
+      global: {
+        headers: {
+          'x-client-info': 'ddplanner-web'
+        }
+      }
+    })
+  : null
 
 // Função helper para executar operações do Supabase com tratamento de erro robusto
 export const executeSupabaseOperation = async <T>(
@@ -28,7 +30,7 @@ export const executeSupabaseOperation = async <T>(
   fallback?: () => T,
   operationName = 'Operação Supabase'
 ): Promise<T | null> => {
-  if (!isSupabaseConfigured()) {
+  if (!isSupabaseConfigured() || !supabase) {
     console.log(`⚠️ [SUPABASE] ${operationName}: Supabase não configurado, usando fallback`)
     return fallback ? fallback() : null
   }
