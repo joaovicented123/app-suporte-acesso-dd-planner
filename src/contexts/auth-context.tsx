@@ -33,6 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const session = await executeSupabaseOperation(
           async () => {
+            if (!supabase) throw new Error('Supabase client not available')
             const { data: { session }, error } = await supabase.auth.getSession()
             if (error) throw error
             return session
@@ -119,6 +120,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const result = await executeSupabaseOperation(
       async () => {
+        if (!supabase) throw new Error('Supabase client not available')
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -142,6 +144,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const result = await executeSupabaseOperation(
       async () => {
+        if (!supabase) throw new Error('Supabase client not available')
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -172,6 +175,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const result = await executeSupabaseOperation(
       async () => {
+        if (!supabase) throw new Error('Supabase client not available')
         const { error } = await supabase.auth.signOut()
         if (error) throw error
         return true
