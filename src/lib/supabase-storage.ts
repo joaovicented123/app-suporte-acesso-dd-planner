@@ -60,38 +60,7 @@ export class SupabaseStorage {
         if (error.code === 'PGRST205' || error.code === '42P01') {
           console.log('⚠️ Tabela study_plans não existe no Supabase')
           console.log('📋 Para resolver: Acesse o dashboard do Supabase e execute o SQL:')
-          console.log(`
-CREATE TABLE IF NOT EXISTS public.study_plans (
-  id TEXT PRIMARY KEY,
-  user_id UUID NOT NULL,
-  title TEXT NOT NULL,
-  concurso TEXT NOT NULL,
-  cargo TEXT NOT NULL,
-  total_days INTEGER NOT NULL,
-  completed_tasks JSONB DEFAULT '[]'::jsonb,
-  plans JSONB DEFAULT '[]'::jsonb,
-  form_data JSONB DEFAULT '{}'::jsonb,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Criar índices para melhor performance
-CREATE INDEX IF NOT EXISTS idx_study_plans_user_id ON public.study_plans(user_id);
-CREATE INDEX IF NOT EXISTS idx_study_plans_created_at ON public.study_plans(created_at);
-
--- Habilitar RLS (Row Level Security)
-ALTER TABLE public.study_plans ENABLE ROW LEVEL SECURITY;
-
--- Políticas de segurança
-CREATE POLICY IF NOT EXISTS "Users can view own study plans" ON public.study_plans
-  FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY IF NOT EXISTS "Users can insert own study plans" ON public.study_plans
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY IF NOT EXISTS "Users can update own study plans" ON public.study_plans
-  FOR UPDATE USING (auth.uid() = user_id);
-          `)
+          console.log(`\nCREATE TABLE IF NOT EXISTS public.study_plans (\n  id TEXT PRIMARY KEY,\n  user_id UUID NOT NULL,\n  title TEXT NOT NULL,\n  concurso TEXT NOT NULL,\n  cargo TEXT NOT NULL,\n  total_days INTEGER NOT NULL,\n  completed_tasks JSONB DEFAULT '[]'::jsonb,\n  plans JSONB DEFAULT '[]'::jsonb,\n  form_data JSONB DEFAULT '{}'::jsonb,\n  created_at TIMESTAMPTZ DEFAULT NOW(),\n  updated_at TIMESTAMPTZ DEFAULT NOW()\n);\n\n-- Criar índices para melhor performance\nCREATE INDEX IF NOT EXISTS idx_study_plans_user_id ON public.study_plans(user_id);\nCREATE INDEX IF NOT EXISTS idx_study_plans_created_at ON public.study_plans(created_at);\n\n-- Habilitar RLS (Row Level Security)\nALTER TABLE public.study_plans ENABLE ROW LEVEL SECURITY;\n\n-- Políticas de segurança\nCREATE POLICY IF NOT EXISTS \"Users can view own study plans\" ON public.study_plans\n  FOR SELECT USING (auth.uid() = user_id);\n\nCREATE POLICY IF NOT EXISTS \"Users can insert own study plans\" ON public.study_plans\n  FOR INSERT WITH CHECK (auth.uid() = user_id);\n\nCREATE POLICY IF NOT EXISTS \"Users can update own study plans\" ON public.study_plans\n  FOR UPDATE USING (auth.uid() = user_id);\n          `)
           return false
         }
         console.log('Erro ao verificar tabela:', error)
@@ -110,6 +79,11 @@ CREATE POLICY IF NOT EXISTS "Users can update own study plans" ON public.study_p
   static async savePlan(planData: StoredStudyPlan): Promise<boolean> {
     try {
       if (!(await this.isConfigured())) {
+        return false
+      }
+
+      if (!supabase) {
+        console.log('Cliente Supabase não inicializado')
         return false
       }
 
@@ -211,6 +185,11 @@ CREATE POLICY IF NOT EXISTS "Users can update own study plans" ON public.study_p
         return []
       }
 
+      if (!supabase) {
+        console.log('Cliente Supabase não inicializado')
+        return []
+      }
+
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
         console.log('Usuário não autenticado, carregando apenas do localStorage')
@@ -267,6 +246,11 @@ CREATE POLICY IF NOT EXISTS "Users can update own study plans" ON public.study_p
         return false
       }
 
+      if (!supabase) {
+        console.log('Cliente Supabase não inicializado')
+        return false
+      }
+
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
         console.log('Usuário não autenticado, atualizando apenas no localStorage')
@@ -318,13 +302,18 @@ CREATE POLICY IF NOT EXISTS "Users can update own study plans" ON public.study_p
         return false
       }
 
+      if (!supabase) {
+        console.log('Cliente Supabase não inicializado')
+        return false
+      }
+
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
         console.log('Usuário não autenticado, deletando apenas do localStorage')
         return false
       }
 
-      // Como DELETE não é permitido, vamos marcar como "deletado" ou simplesmente não fazer nada
+      // Como DELETE não é permitido, vamos marcar como \"deletado\" ou simplesmente não fazer nada
       console.log('⚠️ Operação DELETE não permitida no Supabase, mantendo apenas no localStorage')
       return true
     } catch (error) {
