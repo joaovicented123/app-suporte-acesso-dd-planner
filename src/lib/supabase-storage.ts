@@ -46,6 +46,11 @@ export class SupabaseStorage {
       }
 
       // Tentar fazer uma consulta simples para verificar se a tabela existe
+      if (!supabase) {
+        console.log('Cliente Supabase não inicializado')
+        return false
+      }
+      
       const { error } = await supabase
         .from('study_plans')
         .select('id')
