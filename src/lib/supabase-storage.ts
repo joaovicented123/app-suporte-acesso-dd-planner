@@ -17,6 +17,11 @@ export class SupabaseStorage {
       }
 
       // Fazer uma verificação simples de conectividade
+      if (!supabase) {
+        console.log('Cliente Supabase não inicializado')
+        return false
+      }
+      
       const { data, error } = await supabase.auth.getSession()
       
       // Se houver erro de rede, retornar false
